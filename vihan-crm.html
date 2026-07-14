@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vihan Property — CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#0B1E3D; --navy-deep:#071428; --copper:#C8892A; --copper-light:#E4A94A;
+    --copper-pale:#F5E6C8; --cream:#FAF6EF; --white:#FFFFFF;
+    --slate:#8494A8; --slate-light:#B8C4D0;
+    --green:#22C55E; --red:#EF4444; --amber:#F59E0B; --blue:#3B82F6;
+    --border:#E2EAF4; --shadow:0 4px 24px rgba(11,30,61,0.10);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--navy);line-height:1.5;min-height:100vh;}
+
+  /* ── SIDEBAR ── */
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{
+    width:240px;flex-shrink:0;
+    background:var(--navy-deep);
+    display:flex;flex-direction:column;
+    position:fixed;top:0;left:0;bottom:0;z-index:50;
+    border-right:1px solid rgba(200,137,42,0.15);
+  }
+  .sidebar-logo{
+    padding:22px 20px 18px;
+    border-bottom:1px solid rgba(200,137,42,0.15);
+    display:flex;align-items:center;gap:10px;
+  }
+  .logo-hex{
+    width:36px;height:36px;background:var(--copper);
+    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .logo-hex span{color:#fff;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;}
+  .logo-text strong{display:block;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:#fff;}
+  .logo-text small{font-size:9px;color:var(--copper-light);letter-spacing:0.14em;text-transform:uppercase;}
+
+  .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 20px;cursor:pointer;
+    font-size:13px;font-weight:500;color:var(--slate-light);
+    transition:background 0.15s,color 0.15s;
+    border-left:3px solid transparent;
+  }
+  .nav-item:hover{background:rgba(200,137,42,0.08);color:#fff;}
+  .nav-item.active{background:rgba(200,137,42,0.12);color:var(--copper-light);border-left-color:var(--copper);}
+  .nav-item svg{width:17px;height:17px;opacity:0.7;flex-shrink:0;}
+  .nav-item.active svg{opacity:1;}
+
+  .sidebar-footer{
+    padding:16px 20px;border-top:1px solid rgba(200,137,42,0.15);
+    font-size:11px;color:var(--slate);
+  }
+
+  /* ── MAIN ── */
+  .main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+
+  /* ── TOPBAR ── */
+  .topbar{
+    background:var(--white);border-bottom:1px solid var(--border);
+    padding:0 28px;height:62px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:40;
+  }
+  .topbar-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);}
+  .topbar-title span{color:var(--copper);}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .sync-status{font-size:12px;color:var(--slate);display:flex;align-items:center;gap:6px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+  .sync-dot.syncing{animation:pulse-green 1s infinite;}
+  @keyframes pulse-green{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+  .btn{
+    padding:9px 18px;border-radius:4px;font-size:13px;font-weight:600;
+    cursor:pointer;border:none;transition:all 0.18s;letter-spacing:0.02em;
+    display:inline-flex;align-items:center;gap:7px;
+  }
+  .btn-primary{background:var(--copper);color:#fff;}
+  .btn-primary:hover{background:var(--copper-light);color:var(--navy);}
+  .btn-outline{background:transparent;color:var(--navy);border:1px solid var(--border);}
+  .btn-outline:hover{border-color:var(--copper);color:var(--copper);}
+  .btn-sm{padding:6px 12px;font-size:12px;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-danger:hover{background:#DC2626;}
+  .btn-green{background:var(--green);color:#fff;}
+
+  /* ── CONTENT ── */
+  .content{padding:28px;flex:1;}
+
+  /* ── PAGES ── */
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* ── STATS ROW ── */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px;}
+  .stat-card{
+    background:var(--white);border-radius:8px;padding:20px 22px;
+    border:1px solid var(--border);box-shadow:var(--shadow);
+  }
+  .stat-card-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--slate);margin-bottom:8px;}
+  .stat-card-num{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:700;color:var(--navy);line-height:1;}
+  .stat-card-sub{font-size:12px;color:var(--slate);margin-top:4px;}
+  .stat-card.copper .stat-card-num{color:var(--copper);}
+  .stat-card.green  .stat-card-num{color:var(--green);}
+  .stat-card.blue   .stat-card-num{color:var(--blue);}
+
+  /* ── FILTERS / TOOLBAR ── */
+  .toolbar{
+    background:var(--white);border:1px solid var(--border);border-radius:8px;
+    padding:14px 18px;margin-bottom:20px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .search-box{
+    flex:1;min-width:200px;
+    display:flex;align-items:center;gap:8px;
+    background:var(--cream);border:1px solid var(--border);
+    border-radius:5px;padding:8px 12px;
+  }
+  .search-box svg{width:15px;height:15px;stroke:var(--slate);flex-shrink:0;}
+  .search-box input{border:none;background:transparent;font-size:13px;color:var(--navy);outline:none;width:100%;}
+  .filter-select{
+    padding:8px 12px;border:1px solid var(--border);border-radius:5px;
+    font-size:13px;color:var(--navy);background:var(--cream);outline:none;cursor:pointer;
+  }
+  .filter-select:focus{border-color:var(--copper);}
+
+  /* ── TABLE ── */
+  .table-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow);}
+  table{width:100%;border-collapse:collapse;}
+  thead{background:var(--navy);}
+  th{padding:12px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--copper-light);white-space:nowrap;}
+  td{padding:13px 14px;font-size:13px;color:var(--navy);border-bottom:1px solid var(--border);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(200,137,42,0.04);}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+    white-space:nowrap;
+  }
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.7;}
+  .badge-new     {background:#EFF6FF;color:#2563EB;}
+  .badge-contacted{background:#FFF7ED;color:#C2410C;}
+  .badge-followup{background:#FEFCE8;color:#854D0E;}
+  .badge-converted{background:#F0FDF4;color:#15803D;}
+  .badge-lost    {background:#FEF2F2;color:#B91C1C;}
+
+  .source-chip{
+    font-size:11px;padding:2px 8px;border-radius:3px;
+    background:var(--copper-pale);color:var(--copper);font-weight:500;
+  }
+
+  .action-btns{display:flex;gap:6px;align-items:center;}
+
+  /* ── MODAL ── */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;z-index:200;
+    background:rgba(7,20,40,0.6);backdrop-filter:blur(3px);
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--white);border-radius:10px;
+    width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+    box-shadow:0 24px 80px rgba(7,20,40,0.35);
+  }
+  .modal-header{
+    padding:20px 24px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .modal-header h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);}
+  .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--slate);transition:color 0.15s;}
+  .modal-close:hover{color:var(--navy);}
+  .modal-body{padding:24px;}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+  .mform-group{margin-bottom:16px;}
+  .mform-group label{display:block;font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--slate);margin-bottom:6px;}
+  .mform-group input,
+  .mform-group select,
+  .mform-group textarea{
+    width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:5px;
+    font-family:'Inter',sans-serif;font-size:14px;color:var(--navy);
+    background:var(--cream);outline:none;transition:border-color 0.2s;
+  }
+  .mform-group input:focus,
+  .mform-group select:focus,
+  .mform-group textarea:focus{border-color:var(--copper);box-shadow:0 0 0 3px rgba(200,137,42,0.1);}
+  .mform-group textarea{resize:vertical;min-height:80px;}
+  .mform-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  /* ── DETAIL PANEL ── */
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+  .detail-item label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:3px;}
+  .detail-item span{font-size:14px;color:var(--navy);font-weight:500;}
+
+  .timeline{margin-top:6px;}
+  .timeline-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .timeline-item:last-child{border-bottom:none;}
+  .tl-dot{width:8px;height:8px;background:var(--copper);border-radius:50%;margin-top:6px;flex-shrink:0;}
+  .tl-body{flex:1;}
+  .tl-text{font-size:13px;color:var(--navy);}
+  .tl-time{font-size:11px;color:var(--slate);margin-top:2px;}
+
+  /* ── EMPTY STATE ── */
+  .empty-state{text-align:center;padding:60px 20px;color:var(--slate);}
+  .empty-state svg{width:48px;height:48px;stroke:var(--slate-light);margin-bottom:14px;}
+  .empty-state h4{font-size:16px;color:var(--navy);margin-bottom:6px;}
+  .empty-state p{font-size:13px;}
+
+  /* ── SETUP PAGE ── */
+  .setup-card{background:var(--white);border-radius:10px;padding:32px;border:1px solid var(--border);max-width:640px;margin:0 auto;}
+  .setup-card h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:8px;}
+  .setup-step{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--border);}
+  .setup-step:last-child{border-bottom:none;}
+  .step-num{width:30px;height:30px;background:var(--copper);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .step-body h4{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+  .step-body p{font-size:13px;color:var(--slate);line-height:1.65;}
+  .step-body code{background:var(--cream);padding:2px 7px;border-radius:3px;font-size:12px;color:var(--copper);border:1px solid var(--copper-pale);}
+
+  .url-input-wrap{display:flex;gap:10px;margin-top:10px;}
+  .url-input-wrap input{flex:1;padding:10px 13px;border:1px solid var(--border);border-radius:5px;font-size:13px;outline:none;}
+  .url-input-wrap input:focus{border-color:var(--copper);}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px){
+    .sidebar{width:200px;}
+    .main{margin-left:200px;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:640px){
+    .sidebar{transform:translateX(-100%);transition:transform 0.3s;}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .mform-row{grid-template-columns:1fr;}
+  }
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:6px;
+    font-size:13px;font-weight:500;z-index:999;
+    transition:transform 0.3s;box-shadow:0 8px 28px rgba(7,20,40,0.3);
+    border-left:4px solid var(--copper);white-space:nowrap;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.success{border-left-color:var(--green);}
+  .toast.error{border-left-color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-hex"><span>V</span></div>
+    <div class="logo-text">
+      <strong>Vihan Property</strong>
+      <small>CRM Dashboard</small>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('leads')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      All Leads
+    </div>
+    <div class="nav-item" onclick="showPage('add')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Add Lead
+    </div>
+    <div class="nav-item" onclick="showPage('setup')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Setup / Connect
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    Vihan Property CRM v1.0<br>
+    Director: Pankaj Kumar
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Vihan <span>CRM</span></div>
+    <div class="topbar-right">
+      <div class="sync-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel">Ready</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="syncFromSheet()">↻ Sync</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('add')">+ Add Lead</button>
+    </div>
+  </div>
+
+  <!-- ═══ DASHBOARD PAGE ═══ -->
+  <div class="content page active" id="page-dashboard">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-card-label">Total Leads</div>
+        <div class="stat-card-num" id="stat-total">0</div>
+        <div class="stat-card-sub">All time</div>
+      </div>
+      <div class="stat-card copper">
+        <div class="stat-card-label">New This Week</div>
+        <div class="stat-card-num" id="stat-new">0</div>
+        <div class="stat-card-sub">Uncontacted</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-card-label">Converted</div>
+        <div class="stat-card-num" id="stat-converted">0</div>
+        <div class="stat-card-sub">Deals closed</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-card-label">Follow-Up</div>
+        <div class="stat-card-num" id="stat-followup">0</div>
+        <div class="stat-card-sub">Pending action</div>
+      </div>
+    </div>
+
+    <!-- Recent leads preview -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Property</th>
+            <th>Budget</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="dashboard-tbody">
+          <tr><td colspan="8"><div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <h4>No leads yet</h4>
+            <p>Leads from the website form or manual entries will appear here.</p>
+          </div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ ALL LEADS PAGE ═══ -->
+  <div class="content page" id="page-leads">
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Search name, phone, property…" oninput="renderLeads()">
+      </div>
+      <select class="filter-select" id="filterStatus" onchange="renderLeads()">
+        <option value="">All Status</option>
+        <option>New</option>
+        <option>Contacted</option>
+        <option>Follow-Up</option>
+        <option>Converted</option>
+        <option>Lost</option>
+      </select>
+      <select class="filter-select" id="filterSource" onchange="renderLeads()">
+        <option value="">All Sources</option>
+        <option>Website Form</option>
+        <option>Manual Entry</option>
+        <option>WhatsApp</option>
+        <option>Referral</option>
+        <option>Walk-in</option>
+      </select>
+      <select class="filter-select" id="filterProperty" onchange="renderLeads()">
+        <option value="">All Types</option>
+        <option>Residential Flat / Apartment</option>
+        <option>Commercial Shop / Office</option>
+        <option>Residential Plot</option>
+        <option>Industrial Plot</option>
+        <option>Farm House</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Property</th>
+            <th>Budget</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody"></tbody>
+      </table>
+    </div>
+    <div id="leads-empty" class="empty-state" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <h4>No leads match your filters</h4>
+      <p>Try clearing the filters or adding a new lead.</p>
+    </div>
+  </div>
+
+  <!-- ═══ ADD LEAD PAGE ═══ -->
+  <div class="content page" id="page-add">
+    <div class="setup-card" style="max-width:580px;">
+      <h2>Add New Lead</h2>
+      <p style="font-size:14px;color:var(--slate);margin-bottom:24px;">Manually enter a lead — it will be saved locally and synced to Google Sheets.</p>
+
+      <div class="mform-row">
+        <div class="mform-group">
+          <label>Full Name *</label>
+          <input type="text" id="al-name" placeholder="Client name">
+        </div>
+        <div class="mform-group">
+          <label>Phone Number *</label>
+          <input type="tel" id="al-phone" placeholder="+91 XXXXX XXXXX">
+        </div>
+      </div>
+      <div class="mform-group">
+        <label>Email</label>
+        <input type="email" id="al-email" placeholder="client@email.com">
+      </div>
+      <div class="mform-row">
+        <div class="mform-group">
+          <label>Property Interest</label>
+          <select id="al-property">
+            <option value="">Select Type</option>
+            <option>Residential Flat / Apartment</option>
+            <option>Commercial Shop / Office</option>
+            <option>Residential Plot</option>
+            <option>Industrial Plot</option>
+            <option>Farm House</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="mform-group">
+          <label>Budget Range</label>
+          <select id="al-budget">
+            <option value="">Select Budget</option>
+            <option>Under ₹30 Lakhs</option>
+            <option>₹30 – ₹60 Lakhs</option>
+            <option>₹60 Lakhs – ₹1 Crore</option>
+            <option>₹1 – ₹2 Crore</option>
+            <option>Above ₹2 Crore</option>
+          </select>
+        </div>
+      </div>
+      <div class="mform-row">
+        <div class="mform-group">
+          <label>Lead Source</label>
+          <select id="al-source">
+            <option>Manual Entry</option>
+            <option>WhatsApp</option>
+            <option>Referral</option>
+            <option>Walk-in</option>
+            <option>Phone Call</option>
+            <option>Social Media</option>
+          </select>
+        </div>
+        <div class="mform-group">
+          <label>Status</label>
+          <select id="al-status">
+            <option>New</option>
+            <option>Contacted</option>
+            <option>Follow-Up</option>
+            <option>Converted</option>
+            <option>Lost</option>
+          </select>
+        </div>
+      </div>
+      <div class="mform-group">
+        <label>Notes</label>
+        <textarea id="al-notes" placeholder="Any notes about this lead…"></textarea>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="addLeadManual()" style="flex:1;">Save Lead &amp; Sync to Sheet</button>
+        <button class="btn btn-outline" onclick="clearAddForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SETUP PAGE ═══ -->
+  <div class="content page" id="page-setup">
+    <div class="setup-card">
+      <h2>Setup &amp; Connect</h2>
+      <p style="font-size:14px;color:var(--slate);margin:8px 0 24px;">Follow these steps once to connect the CRM and website form to your Google Sheet.</p>
+
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Create a Google Sheet</h4>
+          <p>Open <a href="https://sheets.google.com" target="_blank" style="color:var(--copper);">sheets.google.com</a> and create a new sheet named <code>Vihan Leads</code>. Add these headers in Row 1 exactly:</p>
+          <p style="margin-top:8px;background:var(--cream);padding:10px 12px;border-radius:5px;font-size:12px;font-family:monospace;line-height:1.8;border:1px solid var(--border);">
+            Timestamp | Name | Phone | Email | Property Type | Budget | Message | Source | Status | Notes
+          </p>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Create a Google Apps Script</h4>
+          <p>In the Google Sheet, go to <code>Extensions → Apps Script</code>. Delete any existing code and paste the script below, then click <strong>Deploy → New Deployment → Web App</strong> (Execute as: Me, Who has access: Anyone).</p>
+          <details style="margin-top:10px;">
+            <summary style="cursor:pointer;font-size:13px;color:var(--copper);font-weight:600;">▶ Show Apps Script Code</summary>
+            <pre style="background:var(--navy-deep);color:#E4A94A;padding:16px;border-radius:6px;font-size:11px;overflow-x:auto;margin-top:10px;line-height:1.7;">
+const SHEET_NAME = 'Vihan Leads';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet()
+                    .getSheetByName(SHEET_NAME);
+    if (data.action === 'addLead') {
+      sheet.appendRow([
+        new Date().toLocaleString('en-IN'),
+        data.name || '',
+        data.phone || '',
+        data.email || '',
+        data.propertyType || '',
+        data.budget || '',
+        data.message || '',
+        data.source || 'Website Form',
+        data.status || 'New',
+        data.notes || ''
+      ]);
+    }
+    return ContentService
+      .createTextOutput(JSON.stringify({success:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({success:false,error:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet()
+                  .getSheetByName(SHEET_NAME);
+  const rows  = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const leads = rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = r[i]);
+    return obj;
+  });
+  return ContentService
+    .createTextOutput(JSON.stringify(leads))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+          </details>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Paste your Web App URL here</h4>
+          <p>After deploying, copy the Web App URL and paste it below. This connects both the website form and this CRM to your sheet.</p>
+          <div class="url-input-wrap">
+            <input type="text" id="sheetUrlInput" placeholder="https://script.google.com/macros/s/…/exec" value="">
+            <button class="btn btn-primary" onclick="saveSheetUrl()">Save URL</button>
+          </div>
+          <p id="url-saved-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none;">✓ URL saved! Both the website form and CRM are now connected.</p>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Update the website HTML</h4>
+          <p>In <code>vihan-property.html</code>, find this line near the bottom and replace <code>https://script.google.com/macros/s/AKfycbxNmRQwJej9Irmzbx4-24Ihwiq02S6jrIpAeFdSbT6ywuTfzfXWG6YrRDhnST4Y0-r6/exec</code> with the same Web App URL:</p>
+          <p style="margin-top:8px;background:var(--cream);padding:10px 12px;border-radius:5px;font-size:12px;font-family:monospace;border:1px solid var(--border);">
+            const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxNmRQwJej9Irmzbx4-24Ihwiq02S6jrIpAeFdSbT6ywuTfzfXWG6YrRDhnST4Y0-r6/exec';
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ═══ DETAIL / EDIT MODAL ═══ -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Lead Details</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid" id="modal-detail-grid"></div>
+      <div class="mform-group" style="margin-top:4px;">
+        <label>Update Status</label>
+        <select id="modal-status-sel" onchange="updateLeadStatus()">
+          <option>New</option>
+          <option>Contacted</option>
+          <option>Follow-Up</option>
+          <option>Converted</option>
+          <option>Lost</option>
+        </select>
+      </div>
+      <div class="mform-group">
+        <label>Add Note / Follow-up</label>
+        <textarea id="modal-note" placeholder="Add a note, follow-up action…" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('detailModal')">Close</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteLead()">Delete Lead</button>
+      <button class="btn btn-primary" onclick="saveLeadChanges()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let leads      = JSON.parse(localStorage.getItem('vihanLeads') || '[]');
+let sheetUrl   = localStorage.getItem('vihanSheetUrl') || 'https://script.google.com/macros/s/AKfycbxNmRQwJej9Irmzbx4-24Ihwiq02S6jrIpAeFdSbT6ywuTfzfXWG6YrRDhnST4Y0-r6/exec';
+let activeLeadIdx = null;
+
+// Persist the default URL if not already saved
+if (!localStorage.getItem('vihanSheetUrl')) {
+  localStorage.setItem('vihanSheetUrl', sheetUrl);
+}
+
+// ── Helpers ──
+function saveLeads() {
+  localStorage.setItem('vihanLeads', JSON.stringify(leads));
+}
+
+function genId() {
+  return 'L' + Date.now().toString(36).toUpperCase();
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function setSyncing(yes) {
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.classList.toggle('syncing', yes);
+  label.textContent = yes ? 'Syncing…' : (sheetUrl ? 'Connected' : 'Ready');
+}
+
+// ── Pages ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item')[['dashboard','leads','add','setup'].indexOf(id)].classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'leads')     renderLeads();
+  if (id === 'setup')     loadSetupUrl();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function badgeHtml(status) {
+  const map = {
+    'New':'badge-new','Contacted':'badge-contacted',
+    'Follow-Up':'badge-followup','Converted':'badge-converted','Lost':'badge-lost'
+  };
+  return `<span class="badge ${map[status]||'badge-new'}">${status||'New'}</span>`;
+}
+
+function renderDashboard() {
+  const total     = leads.length;
+  const newLeads  = leads.filter(l => l.status === 'New').length;
+  const converted = leads.filter(l => l.status === 'Converted').length;
+  const followup  = leads.filter(l => l.status === 'Follow-Up').length;
+
+  document.getElementById('stat-total').textContent     = total;
+  document.getElementById('stat-new').textContent       = newLeads;
+  document.getElementById('stat-converted').textContent = converted;
+  document.getElementById('stat-followup').textContent  = followup;
+
+  const tbody = document.getElementById('dashboard-tbody');
+  const recent = [...leads].reverse().slice(0, 10);
+  if (!recent.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <h4>No leads yet</h4><p>Leads will appear here once submitted.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recent.map((l,i) => `
+    <tr onclick="openDetail(${leads.indexOf(l)})" style="cursor:pointer;">
+      <td style="color:var(--slate);font-size:12px;">${total - i}</td>
+      <td><strong>${l.name}</strong></td>
+      <td><a href="tel:${l.phone}" style="color:var(--copper);text-decoration:none;">${l.phone}</a></td>
+      <td>${l.propertyType||'—'}</td>
+      <td>${l.budget||'—'}</td>
+      <td><span class="source-chip">${l.source||'Website'}</span></td>
+      <td>${badgeHtml(l.status)}</td>
+      <td style="color:var(--slate);font-size:12px;">${fmtDate(l.date)}</td>
+    </tr>`).join('');
+}
+
+function renderLeads() {
+  const q      = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  const fStat  = document.getElementById('filterStatus')?.value||'';
+  const fSrc   = document.getElementById('filterSource')?.value||'';
+  const fProp  = document.getElementById('filterProperty')?.value||'';
+
+  let filtered = [...leads].reverse().filter(l => {
+    const matchQ    = !q || [l.name,l.phone,l.propertyType,l.budget,l.notes].join(' ').toLowerCase().includes(q);
+    const matchStat = !fStat || l.status === fStat;
+    const matchSrc  = !fSrc  || l.source === fSrc;
+    const matchProp = !fProp || l.propertyType === fProp;
+    return matchQ && matchStat && matchSrc && matchProp;
+  });
+
+  const tbody = document.getElementById('leads-tbody');
+  const empty = document.getElementById('leads-empty');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map((l) => {
+    const idx = leads.indexOf(l); // original index
+    // reverse index for display number
+    const num = leads.length - idx;
+    return `
+    <tr>
+      <td style="color:var(--slate);font-size:12px;">${num}</td>
+      <td><strong>${l.name}</strong></td>
+      <td><a href="tel:${l.phone}" style="color:var(--copper);text-decoration:none;">${l.phone}</a></td>
+      <td>${l.propertyType||'—'}</td>
+      <td>${l.budget||'—'}</td>
+      <td><span class="source-chip">${l.source||'Website'}</span></td>
+      <td>${badgeHtml(l.status)}</td>
+      <td style="color:var(--slate);font-size:12px;">${fmtDate(l.date)}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-outline btn-sm" onclick="openDetail(${idx})">View</button>
+          <a href="tel:${l.phone}" class="btn btn-green btn-sm">Call</a>
+          <a href="https://wa.me/91${l.phone.replace(/\D/g,'').slice(-10)}" target="_blank" class="btn btn-primary btn-sm">WA</a>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// ADD LEAD (MANUAL)
+// ═══════════════════════════════════════════════
+function addLeadManual() {
+  const name  = document.getElementById('al-name').value.trim();
+  const phone = document.getElementById('al-phone').value.trim();
+  if (!name || !phone) { showToast('Name and Phone are required.','error'); return; }
+
+  const lead = {
+    id: genId(),
+    name, phone,
+    email:        document.getElementById('al-email').value.trim(),
+    propertyType: document.getElementById('al-property').value,
+    budget:       document.getElementById('al-budget').value,
+    source:       document.getElementById('al-source').value || 'Manual Entry',
+    status:       document.getElementById('al-status').value || 'New',
+    notes:        document.getElementById('al-notes').value.trim(),
+    message:      '',
+    date:         new Date().toISOString()
+  };
+
+  leads.push(lead);
+  saveLeads();
+  pushToSheet(lead);
+  clearAddForm();
+  showToast('✓ Lead saved & syncing to Google Sheet', 'success');
+  showPage('leads');
+}
+
+function clearAddForm() {
+  ['al-name','al-phone','al-email','al-notes'].forEach(id => document.getElementById(id).value='');
+  ['al-property','al-budget'].forEach(id => document.getElementById(id).selectedIndex=0);
+}
+
+// ═══════════════════════════════════════════════
+// DETAIL / EDIT MODAL
+// ═══════════════════════════════════════════════
+function openDetail(idx) {
+  activeLeadIdx = idx;
+  const l = leads[idx];
+  document.getElementById('modal-title').textContent = l.name + ' — Lead Detail';
+  document.getElementById('modal-detail-grid').innerHTML = `
+    <div class="detail-item"><label>Name</label><span>${l.name}</span></div>
+    <div class="detail-item"><label>Phone</label><span><a href="tel:${l.phone}" style="color:var(--copper)">${l.phone}</a></span></div>
+    <div class="detail-item"><label>Email</label><span>${l.email||'—'}</span></div>
+    <div class="detail-item"><label>Source</label><span><span class="source-chip">${l.source||'—'}</span></span></div>
+    <div class="detail-item"><label>Property</label><span>${l.propertyType||'—'}</span></div>
+    <div class="detail-item"><label>Budget</label><span>${l.budget||'—'}</span></div>
+    <div class="detail-item"><label>Date Added</label><span>${fmtDate(l.date)}</span></div>
+    <div class="detail-item"><label>Message</label><span>${l.message||'—'}</span></div>
+    ${l.notes?`<div class="detail-item" style="grid-column:1/-1;"><label>Notes</label><span>${l.notes}</span></div>`:''}
+  `;
+  const sel = document.getElementById('modal-status-sel');
+  sel.value = l.status || 'New';
+  document.getElementById('modal-note').value = '';
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function updateLeadStatus() {
+  if (activeLeadIdx === null) return;
+  leads[activeLeadIdx].status = document.getElementById('modal-status-sel').value;
+  saveLeads();
+}
+
+function saveLeadChanges() {
+  if (activeLeadIdx === null) return;
+  const note  = document.getElementById('modal-note').value.trim();
+  const status= document.getElementById('modal-status-sel').value;
+  leads[activeLeadIdx].status = status;
+  if (note) {
+    const prev = leads[activeLeadIdx].notes || '';
+    leads[activeLeadIdx].notes = (prev ? prev + '\n' : '') + `[${new Date().toLocaleDateString('en-IN')}] ${note}`;
+  }
+  saveLeads();
+  pushToSheet(leads[activeLeadIdx]);
+  closeModal('detailModal');
+  renderLeads();
+  renderDashboard();
+  showToast('✓ Lead updated & synced', 'success');
+}
+
+function deleteLead() {
+  if (activeLeadIdx === null) return;
+  if (!confirm('Delete this lead? This cannot be undone.')) return;
+  leads.splice(activeLeadIdx, 1);
+  saveLeads();
+  closeModal('detailModal');
+  renderLeads();
+  renderDashboard();
+  showToast('Lead deleted.','');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  activeLeadIdx = null;
+}
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════════
+// Hidden iframe for sync (kept for reference)
+const crmIframe = document.createElement('iframe');
+crmIframe.name  = 'crm_hidden_iframe';
+crmIframe.style.display = 'none';
+document.body.appendChild(crmIframe);
+
+function pushToSheet(lead) {
+  const url = 'https://script.google.com/macros/s/AKfycbxNmRQwJej9Irmzbx4-24Ihwiq02S6jrIpAeFdSbT6ywuTfzfXWG6YrRDhnST4Y0-r6/exec';
+  setSyncing(true);
+
+  const params = new URLSearchParams({
+    action:       'addLead',
+    id:           lead.id           || '',
+    name:         lead.name         || '',
+    phone:        lead.phone        || '',
+    email:        lead.email        || '',
+    propertyType: lead.propertyType || '',
+    budget:       lead.budget       || '',
+    message:      lead.message      || '',
+    source:       lead.source       || 'Manual Entry',
+    status:       lead.status       || 'New',
+    notes:        (lead.notes       || '').replace(/\n/g, ' | ')
+  });
+
+  const fullUrl = url + '?' + params.toString();
+  // Image tag — pure GET, zero CORS restrictions, same as browser URL bar
+  new Image().src = fullUrl;
+  setTimeout(() => { new Image().src = fullUrl; }, 5000);
+  setTimeout(() => { new Image().src = fullUrl; }, 12000);
+
+  setTimeout(() => {
+    setSyncing(false);
+    showToast('✓ Lead saved to Google Sheet!', 'success');
+  }, 2000);
+}
+
+function syncFromSheet() {
+  if (!sheetUrl) { showToast('Please set up your Google Sheet URL first.','error'); showPage('setup'); return; }
+  setSyncing(true);
+  // Apps Script doGet returns JSON — plain fetch works for GET requests
+  fetch(sheetUrl + '?action=getLeads', { method: 'GET' })
+    .then(r => r.json())
+    .then(rows => {
+      if (!Array.isArray(rows)) throw new Error('Bad response');
+      // Merge sheet rows into local leads (by phone number dedup)
+      let added = 0;
+      rows.forEach(row => {
+        const phone = String(row['Phone']||'').trim();
+        if (!phone) return;
+        const exists = leads.find(l => l.phone === phone);
+        if (!exists) {
+          leads.push({
+            id: genId(),
+            name:         row['Name']||'',
+            phone,
+            email:        row['Email']||'',
+            propertyType: row['Property Type']||'',
+            budget:       row['Budget']||'',
+            message:      row['Message']||'',
+            source:       row['Source']||'Website Form',
+            status:       row['Status']||'New',
+            notes:        row['Notes']||'',
+            date:         row['Timestamp'] ? new Date(row['Timestamp']).toISOString() : new Date().toISOString()
+          });
+          added++;
+        }
+      });
+      saveLeads();
+      setSyncing(false);
+      renderDashboard();
+      renderLeads();
+      showToast(`✓ Synced — ${added} new lead${added===1?'':'s'} pulled from sheet.`,'success');
+    })
+    .catch(() => {
+      setSyncing(false);
+      showToast('Could not reach Google Sheet. Check your URL.','error');
+    });
+}
+
+// ═══════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════
+function loadSetupUrl() {
+  const inp = document.getElementById('sheetUrlInput');
+  if (inp) inp.value = sheetUrl;
+}
+
+function saveSheetUrl() {
+  const url = document.getElementById('sheetUrlInput').value.trim();
+  if (!url.startsWith('https://')) { showToast('Please enter a valid URL.','error'); return; }
+  sheetUrl = url;
+  localStorage.setItem('vihanSheetUrl', url);
+  document.getElementById('url-saved-msg').style.display = 'block';
+  showToast('✓ Sheet URL saved!','success');
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════
+function exportCSV() {
+  if (!leads.length) { showToast('No leads to export.',''); return; }
+  const headers = ['#','Name','Phone','Email','Property Type','Budget','Source','Status','Notes','Date'];
+  const rows = leads.map((l,i) => [
+    i+1, l.name, l.phone, l.email||'', l.propertyType||'', l.budget||'',
+    l.source||'', l.status||'', (l.notes||'').replace(/\n/g,' | '), fmtDate(l.date)
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'vihan-leads-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast('✓ CSV exported!','success');
+}
+
+// ═══════════════════════════════════════════════
+// INIT — listen for leads from website form via localStorage
+// ═══════════════════════════════════════════════
+window.addEventListener('storage', (e) => {
+  if (e.key === 'vihanLeads') {
+    leads = JSON.parse(e.newValue || '[]');
+    renderDashboard();
+    renderLeads();
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// Init
+renderDashboard();
+document.getElementById('syncLabel').textContent = sheetUrl ? 'Connected' : 'Not connected';
+</script>
+</body>
+</html>
